@@ -1,1 +1,1 @@
-# badminton-picker-repo
+# badminton-team-selection
