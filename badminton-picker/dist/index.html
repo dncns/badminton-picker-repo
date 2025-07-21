@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Badminton Team Picker</title>
+  <title>Badminton Team Selection</title>
   <link href="output.css" rel="stylesheet" />
   <script defer src="app.js"></script>
 </head>
@@ -11,7 +11,7 @@
 
   <header class="bg-gray-900 shadow-md">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-xl md:text-2xl font-bold text-blue-400">AIT Team Selection</h1>
+      <h1 class="text-xl md:text-2xl font-bold text-blue-400">Badminton Team Selection</h1>
       <div id="teamActions" class="hidden space-x-4">
         <button id="resetBtn" class="px-3 md:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">← Back</button>
         <button id="exportBtn" class="px-3 md:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">Export</button>
@@ -28,7 +28,7 @@
                class="w-full border border-gray-700 rounded p-3 bg-gray-900 text-gray-200 focus:ring-blue-400 focus:outline-none">
         <textarea id="namesInput" rows="10"
                   class="w-full border border-gray-700 rounded p-3 bg-gray-900 text-gray-200 focus:ring-blue-400 focus:outline-none"
-                  placeholder="One per line:\nAlice | Likes defense\nBob | Prefers doubles"></textarea>
+                  placeholder="One player per line. Separate preference info with |. e.g. Jeremy | Prefers mixed"></textarea>
         <button id="generateButton"
                 class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
           Generate Teams

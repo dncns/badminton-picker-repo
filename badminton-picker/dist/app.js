@@ -1,3 +1,6 @@
+// Keep track of the current team type globally
+let teamType = "Team";
+
 // ← Back button: return to Load screen
 document.getElementById("resetBtn").addEventListener("click", () => {
   document.getElementById("teamView").classList.add("hidden");
@@ -11,6 +14,7 @@ document.getElementById("addUnassignedBtn").addEventListener("click", () => {
   if (!name) return;
   const pref = prompt("Enter preference (optional):") || "";
   addUnassignedRow(name, pref);
+  checkTeamsCount(); // After adding, ensure teams match new total
 });
 
 // Create a single empty team slot (cell)
@@ -34,7 +38,7 @@ function createSlot() {
 
 // Generate Teams & Unassigned columns
 document.getElementById("generateButton").addEventListener("click", () => {
-  const teamType = document.getElementById("teamTypeInput").value.trim() || "Team";
+  teamType = document.getElementById("teamTypeInput").value.trim() || "Team";
   const lines = document.getElementById("namesInput").value
     .split("\n").map(l => l.trim()).filter(Boolean);
 
@@ -46,47 +50,12 @@ document.getElementById("generateButton").addEventListener("click", () => {
     addUnassignedRow(name, pref);
   });
 
-  // Build Team cards
+  // Build initial Team cards
   const container = document.getElementById("teamsContainer");
   container.innerHTML = "";
   const teamCount = Math.floor(lines.length / 6);
   for (let i = 0; i < teamCount; i++) {
-    const letter = String.fromCharCode(65 + i);
-    const card = document.createElement("div");
-
-    // Always fill grid cell
-    card.className = "w-full bg-gray-800 rounded-lg shadow p-4 flex flex-col gap-4";
-    card.dataset.team = `${teamType} ${letter}`;
-    card.innerHTML = `
-      <h3 class="text-lg font-semibold text-gray-100">
-        ${teamType} ${letter}
-      </h3>
-    `;
-
-    // Wrapper for bottom padding
-    const wrapper = document.createElement("div");
-    wrapper.className = "pb-4";
-
-    // Grid of 6 slots, extra vertical gap
-    const grid = document.createElement("div");
-    grid.className = "grid grid-cols-2 gap-x-4 gap-y-6";
-    grid.style.gridAutoRows = "5rem";
-    for (let j = 0; j < 6; j++) grid.appendChild(createSlot());
-
-    wrapper.appendChild(grid);
-    card.appendChild(wrapper);
-
-    // League input (no-drop)
-    const league = document.createElement("input");
-    league.type = "text";
-    league.placeholder = "League";
-    league.className =
-      "w-full border border-gray-700 rounded p-2 text-sm bg-gray-900 text-gray-300 focus:ring-blue-400 focus:outline-none";
-    league.addEventListener("dragover", e => e.preventDefault());
-    league.addEventListener("drop",     e => e.preventDefault());
-
-    card.appendChild(league);
-    container.appendChild(card);
+    addTeamCard(i);
   }
 
   // Show Teams view
@@ -157,6 +126,8 @@ function dropOnSlot(e) {
   slot.classList.replace("border-gray-700", "border-blue-500");
   slot.draggable = true;
   slot.addEventListener("dragstart", dragFromSlot);
+
+  // After an assignment, total still the same, no new team needed here
 }
 
 // Drag a player out of a filled slot
@@ -206,6 +177,56 @@ function returnToUnassigned(name) {
   }
 }
 
+// Build & append a new team card for index i (0 → A, 1 → B, etc)
+function addTeamCard(index) {
+  const letter = String.fromCharCode(65 + index);
+  const container = document.getElementById("teamsContainer");
+
+  const card = document.createElement("div");
+  card.className = "w-full bg-gray-800 rounded-lg shadow p-4 flex flex-col gap-4";
+  card.dataset.team = `${teamType} ${letter}`;
+  card.innerHTML = `<h3 class="text-lg font-semibold text-gray-100">${teamType} ${letter}</h3>`;
+
+  // Wrapper for padding under the slots
+  const wrapper = document.createElement("div");
+  wrapper.className = "pb-4";
+
+  // Grid of 6 slots with vertical gap
+  const grid = document.createElement("div");
+  grid.className = "grid grid-cols-2 gap-x-4 gap-y-6";
+  grid.style.gridAutoRows = "5rem";
+  for (let j = 0; j < 6; j++) {
+    grid.appendChild(createSlot());
+  }
+
+  wrapper.appendChild(grid);
+  card.appendChild(wrapper);
+
+  // League input (no-drop)
+  const league = document.createElement("input");
+  league.type = "text";
+  league.placeholder = "League";
+  league.className =
+    "w-full border border-gray-700 rounded p-2 text-sm bg-gray-900 text-gray-300 focus:ring-blue-400 focus:outline-none";
+  league.addEventListener("dragover", e => e.preventDefault());
+  league.addEventListener("drop",     e => e.preventDefault());
+
+  card.appendChild(league);
+  container.appendChild(card);
+}
+
+// After any manual addition, ensure enough teams exist
+function checkTeamsCount() {
+  const unassignedCount = document.querySelectorAll("#unassignedTable > div").length;
+  const assignedCount = document.querySelectorAll(".slot div").length;
+  const total = unassignedCount + assignedCount;
+  const requiredTeams = Math.ceil(total / 6);
+  const currentTeams = document.querySelectorAll("#teamsContainer > div").length;
+  for (let i = currentTeams; i < requiredTeams; i++) {
+    addTeamCard(i);
+  }
+}
+
 // Export current teams to CSV
 document.getElementById("exportBtn").addEventListener("click", () => {
   const headers = ["Team", "League", ...Array.from({ length: 6 }, (_, i) => `Player${i + 1}`)];
@@ -213,9 +234,8 @@ document.getElementById("exportBtn").addEventListener("click", () => {
   document.querySelectorAll("#teamsContainer > div").forEach(card => {
     const team = card.dataset.team;
     const league = card.querySelector("input").value;
-    const slots = [...card.querySelectorAll(".slot")];
     const data = [team, league];
-    slots.forEach(slot => {
+    [...card.querySelectorAll(".slot")].forEach(slot => {
       const div = slot.querySelector("div");
       data.push(div ? div.textContent : "");
     });
@@ -223,7 +243,7 @@ document.getElementById("exportBtn").addEventListener("click", () => {
   });
 
   const csv = [headers, ...rows]
-    .map(r => r.map(c => `"${c.replace(/"/g,'""')}"`).join(","))
+    .map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(","))
     .join("\r\n");
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
