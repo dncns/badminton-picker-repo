@@ -1,0 +1,45 @@
+name: 📦 Build & Deploy to GitHub Pages
+
+# whenever you push to main
+on:
+  push:
+    branches:
+      - main
+
+# grant permissions for Pages
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Check out your code
+      - uses: actions/checkout@v3
+
+      # 2) Install Node & npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3) Install dependencies and build your CSS
+      - name: Install & Build CSS
+        working-directory: ./badminton-picker
+        run: |
+          npm ci
+          npm run build:css
+
+      # 4) Tell GitHub we’re going to deploy Pages
+      - uses: actions/configure-pages@v3
+
+      # 5) Upload the `dist/` folder as the artifact
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./badminton-picker/dist
+
+      # 6) Deploy to GitHub Pages
+      - uses: actions/deploy-pages@v1
