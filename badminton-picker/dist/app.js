@@ -14,7 +14,7 @@ document.getElementById("addUnassignedBtn").addEventListener("click", () => {
   if (!name) return;
   const pref = prompt("Enter preference (optional):") || "";
   addUnassignedRow(name, pref);
-  checkTeamsCount(); // After adding, ensure teams match new total
+  checkTeamsCount();
 });
 
 // Create a single empty team slot (cell)
@@ -22,10 +22,7 @@ function createSlot() {
   const slot = document.createElement("div");
   slot.className = [
     "slot",
-    "w-full",          // fill the column
-    "h-24",            // fixed height
-    "p-4",             // padding
-    "select-none",     // prevent text‑select
+    "w-full", "h-24", "p-4", "select-none",
     "flex items-center justify-center",
     "border border-gray-700 rounded",
     "bg-gray-900 dropzone",
@@ -58,7 +55,7 @@ document.getElementById("generateButton").addEventListener("click", () => {
     addTeamCard(i);
   }
 
-  // Show Teams view
+  // Switch views
   document.getElementById("loadView").classList.add("hidden");
   document.getElementById("teamView").classList.remove("hidden");
   document.getElementById("teamActions").classList.remove("hidden");
@@ -69,12 +66,12 @@ document.getElementById("generateButton").addEventListener("click", () => {
 
 // Helper: add row to Unassigned list
 function addUnassignedRow(name, pref = "") {
+  // prevent duplicates
   if (document.querySelector(`#unassignedTable [data-name="${name}"]`)) return;
+
   const row = document.createElement("div");
   row.className = [
-    "flex flex-col",
-    "bg-gray-700 rounded p-3",
-    "select-none",     // prevent text‑select
+    "flex flex-col bg-gray-700 rounded p-3 select-none",
     "shadow-sm cursor-grab hover:bg-gray-600 transition-colors"
   ].join(" ");
   row.draggable = true;
@@ -102,17 +99,16 @@ function dropOnSlot(e) {
   const slot = e.currentTarget;
   const { name } = JSON.parse(e.dataTransfer.getData("text/plain"));
 
-  // 1) If slot already occupied, return that player
+  // 1) If occupied, return old player
   const oldDiv = slot.querySelector("div");
   if (oldDiv) {
-    const oldName = oldDiv.textContent.trim();
-    returnToUnassigned(oldName);
+    returnToUnassigned(oldDiv.textContent.trim());
     slot.innerHTML = "";
-    slot.classList.replace("bg-blue-900", "bg-gray-900");
-    slot.classList.replace("border-blue-500", "border-gray-700");
+    slot.classList.replace("bg-blue-900","bg-gray-900");
+    slot.classList.replace("border-blue-500","border-gray-700");
   }
 
-  // 2) Disable the original Unassigned row
+  // 2) Disable the dragged‑from Unassigned row
   const origRow = document.querySelector(`#unassignedTable [data-name="${name}"]`);
   if (origRow) {
     origRow.classList.add("opacity-40");
@@ -120,14 +116,12 @@ function dropOnSlot(e) {
     origRow.removeEventListener("dragstart", dragStartRow);
   }
 
-  // 3) Place new player into this slot
+  // 3) Place new player into slot
   slot.innerHTML = `<div class="font-medium text-gray-100">${name}</div>`;
-  slot.classList.replace("bg-gray-900", "bg-blue-900");
-  slot.classList.replace("border-gray-700", "border-blue-500");
+  slot.classList.replace("bg-gray-900","bg-blue-900");
+  slot.classList.replace("border-gray-700","border-blue-500");
   slot.draggable = true;
   slot.addEventListener("dragstart", dragFromSlot);
-
-  // After an assignment, total still the same, no new team needed here
 }
 
 // Drag a player out of a filled slot
@@ -135,14 +129,9 @@ function dragFromSlot(e) {
   const slot = e.target.closest(".slot");
   const name = slot.querySelector("div").textContent;
   e.dataTransfer.setData("text/plain", JSON.stringify({ name }));
-  e.dataTransfer.effectAllowed = "move";
-
-  // Clear the slot
   slot.innerHTML = "";
-  slot.classList.replace("bg-blue-900", "bg-gray-900");
-  slot.classList.replace("border-blue-500", "border-gray-700");
-
-  // Return that player
+  slot.classList.replace("bg-blue-900","bg-gray-900");
+  slot.classList.replace("border-blue-500","border-gray-700");
   returnToUnassigned(name);
 }
 
@@ -151,23 +140,22 @@ function dropToUnassigned(e) {
   e.preventDefault();
   const { name } = JSON.parse(e.dataTransfer.getData("text/plain"));
 
-  // Clear any filled slot containing them
+  // clear any filled slot containing them
   document.querySelectorAll(".slot").forEach(slot => {
-    const div = slot.querySelector("div");
-    if (div && div.textContent === name) {
+    const d = slot.querySelector("div");
+    if (d && d.textContent === name) {
       slot.innerHTML = "";
-      slot.classList.replace("bg-blue-900", "bg-gray-900");
-      slot.classList.replace("border-blue-500", "border-gray-700");
+      slot.classList.replace("bg-blue-900","bg-gray-900");
+      slot.classList.replace("border-blue-500","border-gray-700");
     }
   });
-
   returnToUnassigned(name);
 }
 
 // Return a player to Unassigned and re-enable
 function returnToUnassigned(name) {
   if (!document.querySelector(`#unassignedTable [data-name="${name}"]`)) {
-    addUnassignedRow(name, "");
+    addUnassignedRow(name,"");
   }
   const row = document.querySelector(`#unassignedTable [data-name="${name}"]`);
   if (row) {
@@ -177,7 +165,7 @@ function returnToUnassigned(name) {
   }
 }
 
-// Build & append a new team card for index i (0 → A, 1 → B, etc)
+// Build & append a new team card (index 0 → A, 1 → B, etc)
 function addTeamCard(index) {
   const letter = String.fromCharCode(65 + index);
   const container = document.getElementById("teamsContainer");
@@ -187,22 +175,15 @@ function addTeamCard(index) {
   card.dataset.team = `${teamType} ${letter}`;
   card.innerHTML = `<h3 class="text-lg font-semibold text-gray-100">${teamType} ${letter}</h3>`;
 
-  // Wrapper for padding under the slots
   const wrapper = document.createElement("div");
   wrapper.className = "pb-4";
-
-  // Grid of 6 slots with vertical gap
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-2 gap-x-4 gap-y-6";
   grid.style.gridAutoRows = "5rem";
-  for (let j = 0; j < 6; j++) {
-    grid.appendChild(createSlot());
-  }
-
+  for (let j = 0; j < 6; j++) grid.appendChild(createSlot());
   wrapper.appendChild(grid);
   card.appendChild(wrapper);
 
-  // League input (no-drop)
   const league = document.createElement("input");
   league.type = "text";
   league.placeholder = "League";
@@ -210,46 +191,47 @@ function addTeamCard(index) {
     "w-full border border-gray-700 rounded p-2 text-sm bg-gray-900 text-gray-300 focus:ring-blue-400 focus:outline-none";
   league.addEventListener("dragover", e => e.preventDefault());
   league.addEventListener("drop",     e => e.preventDefault());
-
   card.appendChild(league);
+
   container.appendChild(card);
 }
 
-// After any manual addition, ensure enough teams exist
+// After any manual add, ensure enough teams exist
 function checkTeamsCount() {
   const unassignedCount = document.querySelectorAll("#unassignedTable > div").length;
-  const assignedCount = document.querySelectorAll(".slot div").length;
-  const total = unassignedCount + assignedCount;
-  const requiredTeams = Math.ceil(total / 6);
-  const currentTeams = document.querySelectorAll("#teamsContainer > div").length;
-  for (let i = currentTeams; i < requiredTeams; i++) {
+  const assignedCount   = document.querySelectorAll(".slot div").length;
+  const totalPlayers    = unassignedCount + assignedCount;
+  const neededTeams     = Math.ceil(totalPlayers / 6);
+  const currentTeams    = document.querySelectorAll("#teamsContainer > div").length;
+
+  for (let i = currentTeams; i < neededTeams; i++) {
     addTeamCard(i);
   }
 }
 
 // Export current teams to CSV
 document.getElementById("exportBtn").addEventListener("click", () => {
-  const headers = ["Team", "League", ...Array.from({ length: 6 }, (_, i) => `Player${i + 1}`)];
+  const headers = ["Team","League",...Array.from({ length:6 },(_,i)=>`Player${i+1}`)];
   const rows = [];
   document.querySelectorAll("#teamsContainer > div").forEach(card => {
     const team = card.dataset.team;
     const league = card.querySelector("input").value;
     const data = [team, league];
-    [...card.querySelectorAll(".slot")].forEach(slot => {
-      const div = slot.querySelector("div");
-      data.push(div ? div.textContent : "");
+    card.querySelectorAll(".slot").forEach(slot => {
+      const d = slot.querySelector("div");
+      data.push(d ? d.textContent : "");
     });
     rows.push(data);
   });
 
   const csv = [headers, ...rows]
-    .map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(","))
+    .map(r => r.map(c=>`"${c.replace(/"/g,'""')}"`).join(","))
     .join("\r\n");
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
   a.download = "badminton-teams.csv";
   document.body.appendChild(a);
   a.click();
