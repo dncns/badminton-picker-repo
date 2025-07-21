@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Badminton Team Picker</title>
+  <link href="output.css" rel="stylesheet" />
+  <script defer src="app.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-200 min-h-screen flex flex-col font-sans">
+
+  <header class="bg-gray-900 shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl md:text-2xl font-bold text-blue-400">AIT Team Selection</h1>
+      <div id="teamActions" class="hidden space-x-4">
+        <button id="resetBtn" class="px-3 md:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded">← Back</button>
+        <button id="exportBtn" class="px-3 md:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">Export</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 container mx-auto px-4 py-8 flex flex-col gap-6">
+    <div id="loadView" class="flex justify-center">
+      <section class="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow flex flex-col space-y-4">
+        <h2 class="text-xl font-semibold text-gray-100">Load Players</h2>
+        <input id="teamTypeInput" type="text"
+               placeholder="Team Type (e.g., Mixed, Open)"
+               class="w-full border border-gray-700 rounded p-3 bg-gray-900 text-gray-200 focus:ring-blue-400 focus:outline-none">
+        <textarea id="namesInput" rows="10"
+                  class="w-full border border-gray-700 rounded p-3 bg-gray-900 text-gray-200 focus:ring-blue-400 focus:outline-none"
+                  placeholder="One per line:\nAlice | Likes defense\nBob | Prefers doubles"></textarea>
+        <button id="generateButton"
+                class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
+          Generate Teams
+        </button>
+      </section>
+    </div>
+
+    <div id="teamView" class="hidden flex flex-col lg:flex-row gap-6">
+      <section class="bg-gray-800 p-6 rounded-lg shadow flex flex-col">
+        <h2 class="text-xl font-semibold mb-3 text-gray-100 flex justify-between items-center">
+          <span>Unassigned</span>
+          <button id="addUnassignedBtn"
+                  class="ml-4 px-3 py-1 bg-blue-500 text-white rounded text-sm">+ Add</button>
+        </h2>
+        <div id="unassignedTable"
+             class="grid grid-cols-2 gap-2 border border-gray-700 rounded p-4 bg-gray-900">
+        </div>
+      </section>
+
+      <!-- Add flex-1 so this section always expands to fill the row -->
+      <section id="teamsContainer"
+               class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 text-center py-4 shadow-inner text-gray-500">
+    <p class="text-sm">© dncns</p>
+  </footer>
+</body>
+</html>
